@@ -17,7 +17,7 @@ describe('Typeorm handler', () => {
     createQueryRunner: jest.fn(() => mockedQueryRunner)
   })
   class MockedTestingClass {
-    async methodToTest(): Promise<void> { }
+    async methodToTest(): Promise<void> {}
   }
 
   afterEach(() => jest.clearAllMocks())

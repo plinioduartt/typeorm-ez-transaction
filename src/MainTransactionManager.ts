@@ -8,7 +8,7 @@ export class MainTransactionManager implements ITransactionManager {
   private static _instance: MainTransactionManager | undefined
   private _defaultDataSource: GenericDataSource
 
-  private constructor() { }
+  private constructor() {}
 
   public static instance(): MainTransactionManager {
     if (!MainTransactionManager._instance) {

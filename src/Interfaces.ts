@@ -24,7 +24,9 @@ export interface ITransactionManager {
 
   datasource: () => GenericDataSource
 
-  isValidTypeormDataSource: (dataSource: Exclude<GenericDataSource, undefined>) => dataSource is DataSource
+  isValidTypeormDataSource: (
+    dataSource: Exclude<GenericDataSource, undefined>
+  ) => dataSource is DataSource
 }
 /**
  * Interface for OrmHandler class method arguments

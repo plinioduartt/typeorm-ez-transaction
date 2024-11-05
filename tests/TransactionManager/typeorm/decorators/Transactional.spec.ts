@@ -26,8 +26,7 @@ describe('Transactional decorator with typeorm data source', () => {
   const transactionManager: MainTransactionManager = MainTransactionManager.instance()
   const mockedOptions: DataSourceOptions = createMock<DataSourceOptions>()
   const mockedTypeormDataSource: DataSource = new DataSource(mockedOptions)
-  transactionManager
-    .setDatasource(mockedTypeormDataSource)
+  transactionManager.setDatasource(mockedTypeormDataSource)
   const expectedResult = 'test'
 
   afterEach(() => {

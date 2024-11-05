@@ -18,14 +18,15 @@ export class TypeormHandler implements IOrmHandler {
     return await asyncLocalStorage.run(new Map(), async () => {
       const ctx = asyncLocalStorage.getStore()
 
-      const manager: QueryRunner = (dataSource).createQueryRunner()
+      const manager: QueryRunner = dataSource.createQueryRunner()
       await manager.connect()
       await manager.startTransaction()
 
       ctx?.set(TypeormAsyncStorageKey, manager.manager)
 
       logger.info(
-        `[typeorm-ez-transaction]:::[${target.constructor.name as string
+        `[typeorm-ez-transaction]:::[${
+          target.constructor.name as string
         }]:::[${propertyKey.toString()}] transaction initialized.`
       )
 
@@ -33,13 +34,15 @@ export class TypeormHandler implements IOrmHandler {
         const result: unknown = await originalMethod.apply(context, args)
         await manager.commitTransaction()
         logger.info(
-          `[typeorm-ez-transaction]:::[${target.constructor.name as string
+          `[typeorm-ez-transaction]:::[${
+            target.constructor.name as string
           }]:::[${propertyKey.toString()}] transaction completed successfully.`
         )
         return result
       } catch (error: unknown) {
         logger.info(
-          `[typeorm-ez-transaction]:::[${target.constructor.name as string
+          `[typeorm-ez-transaction]:::[${
+            target.constructor.name as string
           }]:::[${propertyKey.toString()}] has failed. Rollback realized successfully.`
         )
         await manager.rollbackTransaction()
@@ -47,7 +50,6 @@ export class TypeormHandler implements IOrmHandler {
       } finally {
         await manager.release()
       }
-    }
-    )
+    })
   }
 }

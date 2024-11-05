@@ -3,11 +3,7 @@ import pretty from 'pino-pretty'
 import { TransactionManager } from 'src/Constants'
 import { TransactionManagerException } from '../errors'
 import { TypeormHandler } from '../handlers'
-import {
-  GenericDataSource,
-  OrmHandlerOptions,
-  TransactionalOptions
-} from '../Interfaces'
+import { GenericDataSource, OrmHandlerOptions, TransactionalOptions } from '../Interfaces'
 
 /**
  * This decorator encapsulates all the method flow inside a transaction that commits in case of success and do rollback in failure cases
@@ -27,7 +23,8 @@ export function Transactional(options?: TransactionalOptions): MethodDecorator {
 
   return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
     logger.info(
-      `[${target.constructor.name as string
+      `[${
+        target.constructor.name as string
       }][${propertyKey.toString()}] is being intercepted by Transactional decorator...`
     )
 
@@ -37,7 +34,8 @@ export function Transactional(options?: TransactionalOptions): MethodDecorator {
 
       if (!datasource) {
         throw new TransactionManagerException(
-          `[${target.constructor.name as string
+          `[${
+            target.constructor.name as string
           }][${propertyKey.toString()}] Invalid or non-existent DataSource`
         )
       }

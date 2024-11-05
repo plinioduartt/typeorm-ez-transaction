@@ -1,7 +1,7 @@
 {
   "name": "typeorm-ez-transaction",
   "version": "1.0.0",
-  "description": "📚 Abstracted transaction control for Typescript decorators, to facilitate transaction management and make the code cleaner.",
+  "description": "📚 Abstracted Typeorm transaction handler with Typescript decorators, to facilitate Typeorm transactions management and make the code cleaner.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -31,7 +31,6 @@
     "transaction",
     "transactions",
     "typeorm",
-    "knex",
     "node",
     "typescript"
   ],
