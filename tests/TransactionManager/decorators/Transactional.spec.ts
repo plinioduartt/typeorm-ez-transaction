@@ -24,12 +24,11 @@ describe('Transactional decorator', () => {
   [OrmHandlerOptions],
   any
   > = jest.spyOn(TypeormHandler.prototype, 'handle')
-  const transactionManager: MainTransactionManager = MainTransactionManager.getInstance()
+  const transactionManager: MainTransactionManager = MainTransactionManager.instance()
   const mockedOptions: DataSourceOptions = createMock<DataSourceOptions>()
   const mockedTypeormDataSource: DataSource = new DataSource(mockedOptions)
   transactionManager
-    .addDataSource(mockedTypeormDataSource)
-    .setDefaultDataSource(mockedTypeormDataSource)
+    .setDatasource(mockedTypeormDataSource)
   const expectedResult = 'test'
 
   test('Test decorator with invalid specific data source', async () => {
@@ -43,7 +42,7 @@ describe('Transactional decorator', () => {
     const testingClass: MockedTestingClass = new MockedTestingClass()
     spyTypeormHandler.mockResolvedValue(expectedResult)
     jest
-      .spyOn(MainTransactionManager.prototype, 'getDefaultDataSource')
+      .spyOn(MainTransactionManager.prototype, 'datasource')
       .mockReturnValueOnce(undefined)
 
     // act
@@ -67,8 +66,7 @@ describe('Transactional decorator', () => {
     }
     const testingClass: MockedTestingClass = new MockedTestingClass()
     spyTypeormHandler.mockResolvedValue(expectedResult)
-    jest.spyOn(MainTransactionManager.prototype, 'isTypeormDataSource').mockReturnValueOnce(false)
-    jest.spyOn(MainTransactionManager.prototype, 'isKnexDataSource').mockReturnValueOnce(false)
+    jest.spyOn(MainTransactionManager.prototype, 'isValidTypeormDataSource').mockReturnValueOnce(false)
 
     // act
     const request = async (): Promise<string> => await testingClass.methodToTest()

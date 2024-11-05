@@ -1,10 +1,8 @@
-import { Knex } from 'knex'
 import 'reflect-metadata'
+import { TransactionManager } from 'src'
+import { TransactionManagerException } from 'src/errors'
 import { createMock } from 'ts-auto-mock'
 import { DataSource, DataSourceOptions } from 'typeorm'
-import { GenericDataSource, ITransactionManager } from '../../src'
-import { TransactionManagerException } from '../../src/errors'
-import { MainTransactionManager } from '../../src/MainTransactionManager'
 jest.mock('typeorm', () => {
   const mockClass: jest.MockedClass<any> = jest.fn((...args: any) => {
     const instance = Object.create(DataSource.prototype)
@@ -18,59 +16,39 @@ jest.mock('typeorm', () => {
 })
 
 describe('MainTransactionManager', () => {
-  const mockedTypeormDataSource: DataSource = createMock<DataSource>()
+  const mockedTypeormDataSource = createMock<DataSource>()
 
   afterEach(() => {
     jest.clearAllMocks()
   })
 
-  test('Add unique data sources', () => {
-    // arrange
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    const spyAddDataSource: jest.SpyInstance<
-    Pick<ITransactionManager, 'addDataSource' | 'setDefaultDataSource'>,
-    [dataSource: DataSource | Knex],
-    any
-    > = jest.spyOn(sut, 'addDataSource')
-
-    // act
-    sut
-      .addDataSource(mockedTypeormDataSource)
-      .addDataSource(mockedTypeormDataSource)
-      .addDataSource(mockedTypeormDataSource)
-
-    // assert
-    expect(sut.dataSources.length).toBe(1)
-    expect(spyAddDataSource).toHaveBeenCalledTimes(3)
-  })
-
   test('Set default data source', () => {
     // arrange
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    const spySetDefaultDataSource = jest.spyOn(sut, 'setDefaultDataSource')
+    const sut = TransactionManager
+    const spySetDefaultDataSource = jest.spyOn(sut, 'setDatasource')
+    jest.spyOn(sut, 'isValidTypeormDataSource').mockReturnValueOnce(true)
 
     // act
-    sut.addDataSource(mockedTypeormDataSource).setDefaultDataSource(mockedTypeormDataSource)
+    sut.setDatasource(mockedTypeormDataSource)
 
     // assert
-    expect(sut.dataSources.length).toBe(1)
+    expect(sut.datasource()).not.toBeNull()
     expect(spySetDefaultDataSource).toHaveBeenCalledTimes(1)
   })
 
   test('Set default data source with invalid data source', () => {
     // arrange
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    const spySetDefaultDataSource = jest.spyOn(sut, 'setDefaultDataSource')
+    const sut = TransactionManager
+    const spySetDefaultDataSource = jest.spyOn(sut, 'setDatasource')
     const mockedInvalidDataSource: any = createMock<any>()
 
     // act
-    const action = (): void =>
-      sut.addDataSource(mockedTypeormDataSource).setDefaultDataSource(mockedInvalidDataSource)
+    const action = (): void => sut.setDatasource(mockedInvalidDataSource)
 
     // assert
     expect(() => action()).toThrow(
       new TransactionManagerException(
-        '[TransactionManager][setDefaultDataSource] Invalid or non-existent DataSource'
+        '[TransactionManager][setDatasource] Invalid or non-existent DataSource'
       )
     )
     expect(spySetDefaultDataSource).toBeCalledTimes(1)
@@ -78,11 +56,12 @@ describe('MainTransactionManager', () => {
 
   test('Get default data source', () => {
     // arrange
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    sut.addDataSource(mockedTypeormDataSource).setDefaultDataSource(mockedTypeormDataSource)
+    const sut = TransactionManager
+    jest.spyOn(sut, 'isValidTypeormDataSource').mockReturnValueOnce(true)
+    sut.setDatasource(mockedTypeormDataSource)
 
     // act
-    const defaultDataSource: GenericDataSource = sut.getDefaultDataSource()
+    const defaultDataSource = sut.datasource()
 
     // assert
     expect(defaultDataSource).toBe(mockedTypeormDataSource)
@@ -90,69 +69,27 @@ describe('MainTransactionManager', () => {
 
   test('Validate isTypeormDataSource polymorphism', () => {
     // arrange
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    const mockedOptions: DataSourceOptions = createMock<DataSourceOptions>()
+    const sut = TransactionManager
+    const mockedOptions = createMock<DataSourceOptions>()
     const mockedDataSource: DataSource = new DataSource(mockedOptions)
 
     // act
-    const isCorrectDataSourceSource: boolean = sut.isTypeormDataSource(mockedDataSource)
+    const isCorrectDataSourceSource: boolean = sut.isValidTypeormDataSource(mockedDataSource)
 
     // assert
     expect(isCorrectDataSourceSource).toBeTruthy()
-  })
-
-  test('Validate isKnexDataSource polymorphism', () => {
-    // arrange
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    const mockedDataSource = Object.create({ name: 'knex', ...createMock<Knex>() })
-
-    // act
-    const isCorrectDataSourceSource: boolean = sut.isKnexDataSource(mockedDataSource)
-
-    // assert
-    expect(isCorrectDataSourceSource).toBeTruthy()
-  })
-
-  test('Validate getKnexTransaction', async () => {
-    // arrange
-    const mockedDataSource: Knex = Object.create({ name: 'knex', ...createMock<Knex>() })
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    sut.addDataSource(mockedDataSource).setDefaultDataSource(mockedDataSource)
-    sut.isKnexDataSource(mockedDataSource)
-
-    // act
-    const knexTransaction: Knex.Transaction | undefined = await sut.getKnexTransaction()
-
-    // assert
-    expect(knexTransaction).not.toBeUndefined()
-  })
-
-  test('Validate getKnexTransaction for invalid transaction provider', async () => {
-    // arrange
-    const sut: MainTransactionManager = Reflect.construct(MainTransactionManager, [])
-    jest.spyOn(sut, 'getKnexTransactionProvider').mockReturnValue(undefined)
-
-    // act
-    const knexTransaction = async (): Promise<Knex.Transaction | undefined> =>
-      await sut.getKnexTransaction()
-
-    // assert
-    await expect(async () => await knexTransaction()).rejects.toThrow(
-      new TransactionManagerException(
-        '[TransactionManager][getKnexTransaction] Invalid knexTransactionProvider'
-      )
-    )
   })
 
   test('Validate singleton', () => {
     // arrange
-    const instanceOne: MainTransactionManager = MainTransactionManager.getInstance()
-    const instanceTwo: MainTransactionManager = MainTransactionManager.getInstance()
+    const instanceOne = TransactionManager
+    const instanceTwo = TransactionManager
+    jest.spyOn(instanceOne, 'isValidTypeormDataSource').mockReturnValueOnce(true)
 
     // act
-    instanceOne.addDataSource(mockedTypeormDataSource).setDefaultDataSource(mockedTypeormDataSource)
+    instanceOne.setDatasource(mockedTypeormDataSource)
 
     // assert
-    expect(instanceTwo.dataSources.length).toBe(1)
+    expect(instanceTwo.datasource).not.toBeNull()
   })
 })

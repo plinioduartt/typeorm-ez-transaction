@@ -2,6 +2,7 @@ import { createMock } from 'ts-auto-mock'
 import { DataSource, QueryRunner } from 'typeorm'
 import { IOrmHandler, OrmHandlerOptions } from '../../../src'
 import { TypeormHandler } from '../../../src/handlers'
+import { PartialDeep } from 'ts-auto-mock/partial/partial'
 
 describe('Typeorm handler', () => {
   const sut: IOrmHandler = new TypeormHandler()
@@ -16,7 +17,7 @@ describe('Typeorm handler', () => {
     createQueryRunner: jest.fn(() => mockedQueryRunner)
   })
   class MockedTestingClass {
-    async methodToTest(): Promise<void> {}
+    async methodToTest(): Promise<void> { }
   }
 
   afterEach(() => jest.clearAllMocks())
@@ -24,7 +25,7 @@ describe('Typeorm handler', () => {
   test('Transaction commit', async () => {
     // arrange
     const args: OrmHandlerOptions = createMock<OrmHandlerOptions>({
-      dataSource: mockedDataSource,
+      dataSource: mockedDataSource as PartialDeep<DataSource>,
       target: MockedTestingClass.prototype,
       propertyKey: 'methodToTest'
     })
@@ -47,7 +48,7 @@ describe('Typeorm handler', () => {
   test('Transaction rollback', async () => {
     // arrange
     const args: OrmHandlerOptions = createMock<OrmHandlerOptions>({
-      dataSource: mockedDataSource,
+      dataSource: mockedDataSource as PartialDeep<DataSource>,
       target: MockedTestingClass.prototype,
       propertyKey: 'methodToTest'
     })

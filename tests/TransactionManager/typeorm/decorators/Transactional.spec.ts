@@ -23,12 +23,11 @@ describe('Transactional decorator with typeorm data source', () => {
   [OrmHandlerOptions],
   any
   > = jest.spyOn(TypeormHandler.prototype, 'handle')
-  const transactionManager: MainTransactionManager = MainTransactionManager.getInstance()
+  const transactionManager: MainTransactionManager = MainTransactionManager.instance()
   const mockedOptions: DataSourceOptions = createMock<DataSourceOptions>()
   const mockedTypeormDataSource: DataSource = new DataSource(mockedOptions)
   transactionManager
-    .addDataSource(mockedTypeormDataSource)
-    .setDefaultDataSource(mockedTypeormDataSource)
+    .setDatasource(mockedTypeormDataSource)
   const expectedResult = 'test'
 
   afterEach(() => {
@@ -38,8 +37,7 @@ describe('Transactional decorator with typeorm data source', () => {
   const optionsCases: TransactionalOptions[] = [
     undefined as unknown as TransactionalOptions,
     {} as unknown as TransactionalOptions,
-    { logging: true } as unknown as TransactionalOptions,
-    { orm: 'typeorm' }
+    { logging: true } as unknown as TransactionalOptions
   ]
 
   test.each(optionsCases)(

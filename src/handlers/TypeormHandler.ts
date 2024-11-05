@@ -1,5 +1,9 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
+import { TypeormAsyncStorageKey } from 'src/Constants'
+import { QueryRunner } from 'typeorm'
 import { IOrmHandler, OrmHandlerOptions } from '../../src/Interfaces'
-import { DataSource, QueryRunner } from 'typeorm'
+
+const asyncLocalStorage = new AsyncLocalStorage<Map<string, any>>()
 
 export class TypeormHandler implements IOrmHandler {
   async handle({
@@ -11,35 +15,39 @@ export class TypeormHandler implements IOrmHandler {
     context,
     logger
   }: OrmHandlerOptions): Promise<unknown> {
-    const manager: QueryRunner = (dataSource as DataSource).createQueryRunner()
-    await manager.connect()
-    await manager.startTransaction()
+    return await asyncLocalStorage.run(new Map(), async () => {
+      const ctx = asyncLocalStorage.getStore()
 
-    logger.info(
-      `[${
-        target.constructor.name as string
-      }][${propertyKey.toString()}][TypeOrm] transaction initialized.`
-    )
+      const manager: QueryRunner = (dataSource).createQueryRunner()
+      await manager.connect()
+      await manager.startTransaction()
 
-    try {
-      const result: unknown = await originalMethod.apply(context, args)
-      await manager.commitTransaction()
+      ctx?.set(TypeormAsyncStorageKey, manager.manager)
+
       logger.info(
-        `[${
-          target.constructor.name as string
-        }][${propertyKey.toString()}][TypeOrm] transaction completed successfully.`
+        `[typeorm-ez-transaction]:::[${target.constructor.name as string
+        }]:::[${propertyKey.toString()}] transaction initialized.`
       )
-      return result
-    } catch (error: unknown) {
-      logger.info(
-        `[${
-          target.constructor.name as string
-        }][${propertyKey.toString()}][TypeOrm] has failed. Rollback realized successfully.`
-      )
-      await manager.rollbackTransaction()
-      throw error
-    } finally {
-      await manager.release()
+
+      try {
+        const result: unknown = await originalMethod.apply(context, args)
+        await manager.commitTransaction()
+        logger.info(
+          `[typeorm-ez-transaction]:::[${target.constructor.name as string
+          }]:::[${propertyKey.toString()}] transaction completed successfully.`
+        )
+        return result
+      } catch (error: unknown) {
+        logger.info(
+          `[typeorm-ez-transaction]:::[${target.constructor.name as string
+          }]:::[${propertyKey.toString()}] has failed. Rollback realized successfully.`
+        )
+        await manager.rollbackTransaction()
+        throw error
+      } finally {
+        await manager.release()
+      }
     }
+    )
   }
 }
