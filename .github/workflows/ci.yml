@@ -1,7 +1,7 @@
 name: "ci"
 on:
   workflow_run:
-    workflows: [tests]
+    workflows: [main]
     types:
       - completed
 jobs:
