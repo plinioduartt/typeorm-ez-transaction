@@ -18,6 +18,6 @@ export const SupportedDataSources = {
  */
 export const TransactionManager: ITransactionManager = MainTransactionManager.instance()
 
-export const TypeormAsyncStorageKey = 'typeorm-ez-transaction_manager'
+export const TypeormAsyncStorageKey = `${process.pid}-typeorm-ez-transaction_manager`
 
 export const asyncLocalStorage = new AsyncLocalStorage<Map<string, any>>()
