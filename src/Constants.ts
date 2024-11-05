@@ -1,5 +1,6 @@
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { DataSource } from 'typeorm'
-import { SupportedOrms, GenericDataSource, ITransactionManager } from './Interfaces'
+import { GenericDataSource, ITransactionManager, SupportedOrms } from './Interfaces'
 import { MainTransactionManager } from './MainTransactionManager'
 
 /**
@@ -18,3 +19,5 @@ export const SupportedDataSources = {
 export const TransactionManager: ITransactionManager = MainTransactionManager.instance()
 
 export const TypeormAsyncStorageKey = 'typeorm-ez-transaction_manager'
+
+export const asyncLocalStorage = new AsyncLocalStorage<Map<string, any>>()

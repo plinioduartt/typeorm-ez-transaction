@@ -1,9 +1,6 @@
-import { AsyncLocalStorage } from 'node:async_hooks'
-import { TypeormAsyncStorageKey } from 'src/Constants'
+import { asyncLocalStorage, TypeormAsyncStorageKey } from 'src/Constants'
 import { QueryRunner } from 'typeorm'
 import { IOrmHandler, OrmHandlerOptions } from '../../src/Interfaces'
-
-const asyncLocalStorage = new AsyncLocalStorage<Map<string, any>>()
 
 export class TypeormHandler implements IOrmHandler {
   async handle({

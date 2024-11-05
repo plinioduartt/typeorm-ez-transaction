@@ -1,8 +1,7 @@
-import { AsyncLocalStorage } from 'async_hooks'
 import { DataSource, EntityManager } from 'typeorm'
-import { GenericDataSource, ITransactionManager } from './Interfaces'
-import { TypeormAsyncStorageKey } from './Constants'
+import { asyncLocalStorage, TypeormAsyncStorageKey } from './Constants'
 import { TransactionManagerException } from './errors'
+import { GenericDataSource, ITransactionManager } from './Interfaces'
 
 export class MainTransactionManager implements ITransactionManager {
   private static _instance: MainTransactionManager | undefined
@@ -31,7 +30,6 @@ export class MainTransactionManager implements ITransactionManager {
   }
 
   public getManager(): EntityManager {
-    const asyncLocalStorage = new AsyncLocalStorage<Map<string, any>>()
     const ctx = asyncLocalStorage?.getStore()
     return ctx?.get(TypeormAsyncStorageKey) as EntityManager
   }
